@@ -40,7 +40,20 @@ def load_batch_pair_test(list1,idx):
     data_defected=np.expand_dims(data_defected,axis=4)
     return data_defected,hd
 
-
+#--------------
+def load_batch_pair_valid(list1,list2,idx):
+    data,hd=nrrd.read(list1[idx])
+    label,hl=nrrd.read(list2[idx])
+    print('data',list1[idx])
+    print('label',list2[idx])
+    data_defected=resizing(data)
+    data_defected=np.expand_dims(data_defected,axis=0)
+    data_defected=np.expand_dims(data_defected,axis=4)
+    label_=resizing(label)
+    label_=np.expand_dims(label_,axis=0)
+    label_=np.expand_dims(label_,axis=4)
+    return data_defected,label_,hd,hl
+#--------------
 
 def resizingbbox(data,z_dim):
     a,b,c=data.shape

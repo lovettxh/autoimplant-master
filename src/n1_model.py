@@ -147,7 +147,7 @@ class auto_encoder(object):
         for epoch in np.arange(self.epoch):
             i=i+1
             print('creating batches for training epoch :',i)
-            batch_img1, batch_label1,hd,hl = load_batch_pair(data_list,label_list)
+            batch_img1, batch_label1,hd,hl = load_batch_pair(data_list,label_list,self.train_set)
             print('epoch:',i )
             _, cur_train_loss = self.sess.run([u_optimizer, self.Loss], feed_dict={self.input_I: batch_img1, self.input_gt: batch_label1})
             train_output0 = self.sess.run(self.task0_label, feed_dict={self.input_I: batch_img1})
@@ -162,7 +162,8 @@ class auto_encoder(object):
             counter+=1
             if np.mod(counter, self.save_intval) == 0:
                 self.save_chkpoint(self.chkpoint_dir, self.model_name, counter)
-
+        
+        valid()
 
 
 
@@ -192,7 +193,18 @@ class auto_encoder(object):
             nrrd.write(filename,test_output[0,:,:,:].astype('float32'),header)
             k+=1
 
-
+    #-----------------------------------------
+    def valid(self):
+        print("******************Initiate validation******************")
+        data_list =glob('{}/*.nrrd'.format(self.train_data_dir))
+        label_list=glob('{}/*.nrrd'.format(self.train_label_dir))
+        a = 0
+        for i in range(len(self.valid_set)):
+            valid_input,valid_label,hd,hl = load_batch_pair_valid(data_list, label_list, list(self.valid_set)[i])
+            valid_output = self.sess.run(self.task0_label, feed_dict={self.input_I: valid_input})
+            a += self.accuracy(valid_output, valid_label.reshape((1,128,128,64)))
+        print("accuracy:",a/10)
+    #-----------------------------------------
     def save_chkpoint(self, checkpoint_dir, model_name, step):
         model_dir = "%s" % ('n1_ckpt')
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
