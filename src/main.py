@@ -22,9 +22,8 @@ with sess1.as_default():
             total_parameters += variable_parameters
         print('trainable params:',total_parameters)
         # to train the selected model
-        #model.train()
+        model.train()
         # to generate implants using the trained model
-        model.test()
         #print(model.accuracy())
 
 

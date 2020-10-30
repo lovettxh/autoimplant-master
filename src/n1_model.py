@@ -77,8 +77,14 @@ class auto_encoder(object):
     #-------------------
     def init_train_set(self):
         r = {i for i in range(100)}
-        self.valid_set = {random.randint(0, 99) for _ in range(10)}
+        #self.valid_set = {random.randint(0, 99) for _ in range(10)}
+        self.valid_set = set()
+        while(len(self.valid_set) < 10):
+            rand = random.randint(0, 99)
+            if(not (rand in self.valid_set)):
+                self.valid_set.add(rand)
         self.train_set = r - self.valid_set
+        return self.valid_set
     #-------------------
 
     def encoder_decoder(self, inputI):
@@ -163,7 +169,7 @@ class auto_encoder(object):
             if np.mod(counter, self.save_intval) == 0:
                 self.save_chkpoint(self.chkpoint_dir, self.model_name, counter)
         
-        valid()
+        self.valid()
 
 
 
