@@ -4,6 +4,7 @@ import numpy as np
 import nrrd
 import os
 import random
+
 # load data for training and testing.
 from data_loader import *
 # pre_post_processing use 3D connected component analysis to remove
@@ -34,9 +35,10 @@ class auto_encoder(object):
         self.epoch          = 10000
         self.model_name     = 'n1.model'
         self.save_intval    = 100
-        self.build_model()
         
+        self.build_model()
         self.init_train_set()
+        
 
         # directory where the checkpoint can be saved/loaded
         self.chkpoint_dir   = r"D:\autoimplant-master\ckpt"
@@ -93,23 +95,28 @@ class auto_encoder(object):
         print('0',inputI.shape)
         conv1_1 = conv3d(input=inputI, output_chn=64, kernel_size=5, stride=2, use_bias=True, name='conv1')
         conv1_bn = tf.contrib.layers.batch_norm(conv1_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv1_batch_norm")
-        conv1_relu = tf.nn.relu(conv1_bn, name='conv1_relu')
+        #conv1_relu = tf.nn.relu(conv1_bn, name='conv1_relu')
+        conv1_relu = parametric_relu(conv1_bn, name='conv1_relu')
         print('1',conv1_relu.shape)
         conv2_1 = conv3d(input=conv1_relu, output_chn=128, kernel_size=5, stride=2, use_bias=True, name='conv2')
         conv2_bn = tf.contrib.layers.batch_norm(conv2_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv2_batch_norm")
-        conv2_relu = tf.nn.relu(conv2_bn, name='conv2_relu')
+        #conv2_relu = tf.nn.relu(conv2_bn, name='conv2_relu')
+        conv2_relu = parametric_relu(conv2_bn, name='conv2_relu')
         print('2',conv2_relu.shape)
         conv3_1 = conv3d(input=conv2_relu, output_chn= 256, kernel_size=5, stride=2, use_bias=True, name='conv3a')
         conv3_bn = tf.contrib.layers.batch_norm(conv3_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv3_1_batch_norm")
-        conv3_relu = tf.nn.relu(conv3_bn, name='conv3_1_relu')
+        #conv3_relu = tf.nn.relu(conv3_bn, name='conv3_1_relu')
+        conv3_relu = parametric_relu(conv3_bn, name='conv3_1_relu')
         print('3',conv3_relu.shape)
         conv4_1 = conv3d(input=conv3_relu, output_chn=512, kernel_size=5, stride=2, use_bias=True, name='conv4a')
         conv4_bn = tf.contrib.layers.batch_norm(conv4_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv4_1_batch_norm")
-        conv4_relu = tf.nn.relu(conv4_bn, name='conv4_1_relu')
+        #conv4_relu = tf.nn.relu(conv4_bn, name='conv4_1_relu')
+        conv4_relu = parametric_relu(conv4_bn, name='conv4_1_relu')
         print('4',conv4_relu.shape)
         conv5_1 = conv3d(input=conv4_relu, output_chn=512, kernel_size=5, stride=1, use_bias=True, name='conv5a')
         conv5_bn = tf.contrib.layers.batch_norm(conv5_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv5_1_batch_norm")
-        conv5_relu = tf.nn.relu(conv5_bn, name='conv5_1_relu')
+        #conv5_relu = tf.nn.relu(conv5_bn, name='conv5_1_relu')
+        conv5_relu = parametric_relu(conv5_bn, name='conv5_1_relu')
         print('5',conv5_relu.shape)
         feature= conv_bn_relu(input=conv5_relu, output_chn=256, kernel_size=5, stride=1, use_bias=True, is_training=phase_flag, name='conv6_1')
         print('feature',feature.shape)

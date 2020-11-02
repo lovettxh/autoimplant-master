@@ -2,6 +2,7 @@ import os
 
 import tensorflow as tf
 from n1_model import auto_encoder
+
 #from n2_model import auto_encoder
 #from skull_completion_model import auto_encoder
 
@@ -22,7 +23,6 @@ with sess1.as_default():
             total_parameters += variable_parameters
         print('trainable params:',total_parameters)
         # to train the selected model
-        #---
         model.train()
         # to generate implants using the trained model
         #print(model.accuracy())
