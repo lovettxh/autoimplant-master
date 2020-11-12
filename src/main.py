@@ -8,6 +8,7 @@ from n1_model import auto_encoder
 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.8
+#config.gpu_options.allow_growth=True
 sess1 = tf.Session(config=config)
 
 

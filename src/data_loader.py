@@ -105,8 +105,9 @@ def padding(data):
 
 
 
-def load_bbox_pair(list_bbox,list_data,list_label):
-    idx=random.randrange(0,100,1)
+def load_bbox_pair(list_bbox,list_data,list_label,train_set):
+    t=list(train_set)
+    idx= t[random.randint(0,89)]
 
     bbox,hb=nrrd.read(list_bbox[idx])
     print('bbox',list_bbox[idx])
@@ -143,32 +144,47 @@ def load_bbox_pair_test(list_bbox,list_data,idx):
 
     bbox,hb=nrrd.read(list_bbox[idx])
     print('bbox',list_bbox[idx])
-
     data,hd=nrrd.read(list_data[idx])
     print('data',list_data[idx])
-
-
-
     resx,resxx,resy,resyy,resz,reszz=bbox_cal(bbox,data.shape[2])
     print(resx)
     print(resxx)
     print(resy)
     print(resyy)
-
     data_inp=data[resx-margin:512-resxx+margin,resy-margin:521-resyy+margin,data.shape[2]-128:data.shape[2]]
     print(data_inp.shape)
+    data_inp=padding(data_inp)
+    data_inp=np.expand_dims(data_inp,axis=0)
+    data_inp=np.expand_dims(data_inp,axis=4)
+    return data_inp,hd
 
+#------------------------
+def load_bbox_pair_valid(list_bbox,list_data,list_label,idx):
+    bbox,hb=nrrd.read(list_bbox[idx])
+    print('bbox',list_bbox[idx])
+
+    data,hd=nrrd.read(list_data[idx])
+    print('data',list_data[idx])
+
+    label,hl=nrrd.read(list_label[idx])
+    print('label',list_label[idx])
+    resx,resxx,resy,resyy,resz,reszz=bbox_cal(bbox,data.shape[2])
+    print(resx)
+    print(resxx)
+    print(resy)
+    print(resyy)
+    data_inp=data[resx-margin:512-resxx+margin,resy-margin:521-resyy+margin,data.shape[2]-128:data.shape[2]]
+    data_lb=label[resx-margin:512-resxx+margin,resy-margin:512-resyy+margin,data.shape[2]-128:data.shape[2]]
 
     data_inp=padding(data_inp)
-
+    data_lb=padding(data_lb)
 
     data_inp=np.expand_dims(data_inp,axis=0)
     data_inp=np.expand_dims(data_inp,axis=4)
 
+    data_lb=np.expand_dims(data_lb,axis=0)
+    data_lb=np.expand_dims(data_lb,axis=4)
 
-
-    return data_inp,hd
-
-
+    return data_inp,data_lb,hd,hl
 
 

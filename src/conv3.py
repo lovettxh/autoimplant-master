@@ -21,8 +21,8 @@ def conv_bn_relu(input, output_chn, kernel_size, stride, use_bias, is_training, 
         conv = conv3d(input, output_chn, kernel_size, stride, use_bias, name='conv')
 
         bn = tf.contrib.layers.batch_norm(conv, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=is_training, scope="batch_norm")
-        #relu = tf.nn.relu(bn, name='relu')
-        relu = parametric_relu(bn, name='relu')
+        relu = tf.nn.relu(bn, name='relu')
+        #relu = parametric_relu(bn, name='relu')
     return relu
 
 
@@ -42,8 +42,8 @@ def deconv_bn_relu(input, output_chn, is_training, name):
     with tf.variable_scope(name):
         conv = Deconv3d(input, output_chn, name='deconv')
         bn = tf.contrib.layers.batch_norm(conv, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=is_training, scope="batch_norm")
-        #relu = tf.nn.relu(bn, name='relu')
-        relu = parametric_relu(bn, name='relu')
+        relu = tf.nn.relu(bn, name='relu')
+        #relu = parametric_relu(bn, name='relu')
     return relu
 
 

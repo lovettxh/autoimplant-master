@@ -26,6 +26,7 @@ class auto_encoder(object):
         self.model_name     = 'n2.model'
         self.save_intval    = 100
         self.build_model()
+        self.init_train_set()
 
         # directory where the checkpoint can be saved/loaded
         self.chkpoint_dir   = r"D:\autoimplant-master\ckpt"
@@ -69,6 +70,17 @@ class auto_encoder(object):
         # create model saver
         self.saver = tf.train.Saver()
 
+    #-------------------
+    def init_train_set(self):
+        r = {i for i in range(100)}
+        #self.valid_set = {random.randint(0, 99) for _ in range(10)}
+        self.valid_set = set()
+        while(len(self.valid_set) < 10):
+            rand = random.randint(0, 99)
+            if(not (rand in self.valid_set)):
+                self.valid_set.add(rand)
+        self.train_set = r - self.valid_set
+    #-------------------
 
 
     def encoder_decoder(self, inputI):
@@ -129,10 +141,11 @@ class auto_encoder(object):
         label_list=glob('{}/*.nrrd'.format(self.train_label_dir))
         bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
         i=0
+        print('valid set: ', self.valid_set)
         for epoch in np.arange(self.epoch):
             i=i+1
             print('creating batches for training epoch :',i)
-            batch_img1, batch_label1,hd,hl= load_bbox_pair(bbox_list,data_list,label_list)
+            batch_img1, batch_label1,hd,hl= load_bbox_pair(bbox_list,data_list,label_list,self.train_set)
             print('epoch:',i )
             
             _, cur_train_loss = self.sess.run([u_optimizer, self.Loss], feed_dict={self.input_I: batch_img1, self.input_gt: batch_label1})
@@ -146,9 +159,47 @@ class auto_encoder(object):
             counter+=1
             if np.mod(counter, self.save_intval) == 0:
                 self.save_chkpoint(self.chkpoint_dir, self.model_name, counter)
+        self.valid()
 
+        #-------------------------------
+    def continue_train(self, x, valid):
+        print('training the n2 model...')
+        u_optimizer = tf.train.AdamOptimizer(learning_rate=self.lr, beta1=self.beta1).minimize(self.Loss)
+        init_op = tf.global_variables_initializer()
+        loss_summary_0 =tf.summary.scalar('dice loss',self.Loss)
+        self.sess.run(init_op)
+        if self.load_chkpoint(self.chkpoint_dir):
+            print(" *****Successfully load the checkpoint**********")
+        else:
+            print("*******Fail to load the checkpoint***************")
+        self.log_writer = tf.summary.FileWriter("./logs", self.sess.graph)
+        self.valid_set = valid
+        self.train_set = {i for i in range(100)} - valid
+        counter=1
+        data_list =glob('{}/*.nrrd'.format(self.train_data_dir))
+        label_list=glob('{}/*.nrrd'.format(self.train_label_dir))
+        bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
+        i=x
+        for epoch in np.arange(self.epoch - x):
+            i=i+1
+            print('creating batches for training epoch :',i)
+            batch_img1, batch_label1,hd,hl= load_bbox_pair(bbox_list,data_list,label_list,self.train_set)
+            print('epoch:',i )
+            
+            _, cur_train_loss = self.sess.run([u_optimizer, self.Loss], feed_dict={self.input_I: batch_img1, self.input_gt: batch_label1})
+            train_output0 = self.sess.run(self.task0_label, feed_dict={self.input_I: batch_img1})
+            
+            print('sum for current training whole: %.8f, pred whole:  %.8f'%(np.sum(batch_label1),np.sum(train_output0)))
+            summary_0=self.sess.run(loss_summary_0,feed_dict={self.input_I: batch_img1,self.input_gt: batch_label1})
+            self.log_writer.add_summary(summary_0, counter)           
+            print('current training loss:',cur_train_loss)
+            print('accuracy:', self.accuracy(train_output0, batch_label1.reshape((1,256,256,128))))
+            counter+=1
+            if np.mod(counter, self.save_intval) == 0:
+                self.save_chkpoint(self.chkpoint_dir, self.model_name, counter)
+        self.valid()
 
-
+    #-------------------------------
 
 
     def test(self):
@@ -161,6 +212,7 @@ class auto_encoder(object):
             print("*******Fail to load the checkpoint***************")
         data_list =glob('{}/*.nrrd'.format(self.test_data_dir))
         bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
+        
         k=1
         for i in range(len(data_list)):
             print('generating result for test sample',k)
@@ -171,7 +223,19 @@ class auto_encoder(object):
             filename=self.save_dir+bbox_list[i][-15:-5]+'.nrrd'
             nrrd.write(filename,test_output[0,:,:,:].astype('float32'),header)
             k+=1
-  
+    
+    def valid(self):
+        print("******************Initiate validation******************")
+        data_list =glob('{}/*.nrrd'.format(self.train_data_dir))
+        label_list=glob('{}/*.nrrd'.format(self.train_label_dir))
+        bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
+        a = 0
+        for i in range(len(self.valid_set)):
+            valid_input,valid_label,hd,hl = load_bbox_pair_valid(bbox_list, data_list, label_list, list(self.valid_set)[i])
+            valid_output = self.sess.run(self.task0_label, feed_dict={self.input_I: valid_input})
+            a += self.accuracy(valid_output, valid_label.reshape((1,256,256,128)))
+        print("accuracy:",a/10)
+
 
     def save_chkpoint(self, checkpoint_dir, model_name, step):
         model_dir = "%s" % ('n2_ckpt')
@@ -200,9 +264,7 @@ class auto_encoder(object):
         predict[predict != 0] = 1
         label[label != 0] = 1
         data_defected[data_defected != 0] = 1
-        print("predict", predict.sum())
-        print("label", label.sum())
-        print("data_defected", data_defected.sum())
+        
         return  (1 - predict.sum()/(label.sum() + data_defected.sum()))
 
 
