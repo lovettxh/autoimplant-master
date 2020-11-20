@@ -324,34 +324,6 @@ class auto_encoder(object):
 
 
     def accuracy(self, data_defected, label):
-        """
-        defect = r"D:\autoimplant-master\training_set\defective_skull"
-        implant = r"D:\autoimplant-master\training_set\implant"
-        complete = r"D:\autoimplant-master\training_set\complete_skull"
-
-        data_list =glob('{}/*.nrrd'.format(defect))
-        label_list=glob('{}/*.nrrd'.format(implant))
-        comp_list=glob('{}/*.nrrd'.format(complete))
-        index = 1
-        data,hd=nrrd.read(data_list[index])
-        print('data',data_list[index])
-        label,hl=nrrd.read(label_list[index])
-        print('label',label_list[index])
-        print('shape:',label.shape)
-        compare,hc=nrrd.read(comp_list[index])
-
-        data_defected=resizing(data)
-        label_=resizing(label)
-        compare_=resizing(compare)
-        data_defected=np.expand_dims(data_defected,axis=0)
-        data_defected=np.expand_dims(data_defected,axis=4)
-        label_=np.expand_dims(label_,axis=0)
-        label_=np.expand_dims(label_,axis=4)
-        compare_=np.expand_dims(compare_,axis=0)
-        compare_=np.expand_dims(compare_,axis=4)
-      
-        predict = data_defected + label_ - compare_
-        """
 
         predict = data_defected - label
         predict[predict != 0] = 1
