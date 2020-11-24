@@ -4,7 +4,7 @@ import scipy
 import scipy.ndimage
 import random
 import nrrd
-import numpy as np
+
 from scipy.ndimage import zoom
 
 
@@ -17,14 +17,18 @@ def resizing(label):
 # change
 def load_batch_pair(list1,list2,train_set):
     t = list(train_set)
-    idx= t[random.randint(0,89)]
+    idx= t[random.randint(0,len(t)-1)]
+    
     data,hd=nrrd.read(list1[idx])
     print('data',list1[idx])
     label,hl=nrrd.read(list2[idx])
     print('label',list2[idx])
-    print('shape:',label.shape)
-    data_defected=resizing(data)
-    label_=resizing(label)
+    # data_defected=resizing(data)
+    # label_=resizing(label)
+    # data_defected=np.abs(data_defected)
+    # label_=np.abs(label_)
+    data_defected=np.abs(data)
+    label_=np.abs(label)
     data_defected=np.expand_dims(data_defected,axis=0)
     data_defected=np.expand_dims(data_defected,axis=4)
     label_=np.expand_dims(label_,axis=0)
@@ -107,7 +111,7 @@ def padding(data):
 
 def load_bbox_pair(list_bbox,list_data,list_label,train_set):
     t=list(train_set)
-    idx= t[random.randint(0,89)]
+    idx= t[random.randint(0,600)]
 
     bbox,hb=nrrd.read(list_bbox[idx])
     print('bbox',list_bbox[idx])

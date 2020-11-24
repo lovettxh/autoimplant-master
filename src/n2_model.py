@@ -31,9 +31,9 @@ class auto_encoder(object):
         # directory where the checkpoint can be saved/loaded
         self.chkpoint_dir   = r"D:\autoimplant-master\ckpt"
         # directory containing the 100 training defective skulls
-        self.train_data_dir = r"D:\autoimplant-master\training_set\defective_skull"
+        self.train_data_dir = r"D:\autoimplant-master\training_set\defective_skull_p2"
         # ground truth (implants) for the training data
-        self.train_label_dir = r"D:\autoimplant-master\training_set\implant"
+        self.train_label_dir = r"D:\autoimplant-master\training_set\implant_p2"
         # test data directory
         self.test_data_dir = r"D:\autoimplant-master\test_set_for_participants"
         # directory where the predicted implants from model n1 is stored 
@@ -72,62 +72,57 @@ class auto_encoder(object):
 
     #-------------------
     def init_train_set(self):
-        r = {i for i in range(100)}
+        r = {i for i in range(600)}
         #self.valid_set = {random.randint(0, 99) for _ in range(10)}
         self.valid_set = set()
-        while(len(self.valid_set) < 10):
-            rand = random.randint(0, 99)
+        while(len(self.valid_set) < 120):
+            rand = random.randint(0, 599)
             if(not (rand in self.valid_set)):
                 self.valid_set.add(rand)
         self.train_set = r - self.valid_set
     #-------------------
 
 
+
     def encoder_decoder(self, inputI):
         phase_flag = (self.phase=='train')
-        conv1_1 = conv3d(input=inputI, output_chn=16, kernel_size=3, stride=2, use_bias=True, name='conv1')
-        conv1_bn = tf.contrib.layers.batch_norm(conv1_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv1_batch_norm")
-        conv1_relu = tf.nn.relu(conv1_bn, name='conv1_relu')
-        conv2_1 = conv3d(input=conv1_relu, output_chn=16, kernel_size=3, stride=2, use_bias=True, name='conv2')
-        conv2_bn = tf.contrib.layers.batch_norm(conv2_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv2_batch_norm")
-        conv2_relu = tf.nn.relu(conv2_bn, name='conv2_relu')
-        conv3_1 = conv3d(input=conv2_relu, output_chn=16, kernel_size=3, stride=2, use_bias=True, name='conv3a')
-        conv3_bn = tf.contrib.layers.batch_norm(conv3_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv3_1_batch_norm")
-        conv3_relu = tf.nn.relu(conv3_bn, name='conv3_1_relu')
-        conv4_1 = conv3d(input=conv3_relu, output_chn=16, kernel_size=3, stride=2, use_bias=True, name='conv4a')
-        conv4_bn = tf.contrib.layers.batch_norm(conv4_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv4_1_batch_norm")
-        conv4_relu = tf.nn.relu(conv4_bn, name='conv4_1_relu')
-        conv5_1 = conv3d(input=conv4_relu, output_chn=16, kernel_size=3, stride=2, use_bias=True, name='conv5a')
-        conv5_bn = tf.contrib.layers.batch_norm(conv5_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv5_1_batch_norm")
-        conv5_relu = tf.nn.relu(conv5_bn, name='conv5_1_relu')
-        conv6_1 = conv3d(input=conv4_relu, output_chn=16, kernel_size=3, stride=2, use_bias=True, name='conv6a')
-        conv6_bn = tf.contrib.layers.batch_norm(conv6_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv6_1_batch_norm")
-        conv6_relu = tf.nn.relu(conv6_bn, name='conv6_1_relu')
-        conv5_1 = conv3d(input=conv6_relu, output_chn=64, kernel_size=3, stride=1, use_bias=True, name='conv55a')
-        conv5_bn = tf.contrib.layers.batch_norm(conv5_1, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_flag, scope="conv55_1_batch_norm")
-        conv5_relu = tf.nn.relu(conv5_bn, name='conv55_1_relu')
-        feature= conv_bn_relu(input=conv5_relu, output_chn=64, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv6_1')
-        deconv1_1 = deconv_bn_relu(input=feature, output_chn=32, is_training=phase_flag, name='deconv1_1')
-        deconv1_2 = conv_bn_relu(input=deconv1_1, output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv1_2')
-        deconv2_1 = deconv_bn_relu(input=deconv1_2, output_chn=32, is_training=phase_flag, name='deconv2_1')
-        deconv2_2 = conv_bn_relu(input=deconv2_1, output_chn=32, kernel_size=3,stride=1, use_bias=True, is_training=phase_flag, name='deconv2_2')
-        deconv3_1 = deconv_bn_relu(input=deconv2_2, output_chn=32, is_training=phase_flag, name='deconv3_1')
-        deconv3_2 = conv_bn_relu(input=deconv3_1, output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv3_2')
-        deconv4_1 = deconv_bn_relu(input=deconv3_2, output_chn=32, is_training=phase_flag, name='deconv4_1')
-        deconv4_2 = conv_bn_relu(input=deconv4_1, output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv4_2')
-        deconv5_1 = deconv_bn_relu(input=deconv4_2, output_chn=16, is_training=phase_flag, name='deconv5_1')
-        deconv5_2 = conv_bn_relu(input=deconv5_1, output_chn=16, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv5_2')
-        pred_prob1 = conv_bn_relu(input=deconv5_2, output_chn=self.output_chn, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='pred_prob1')
+        print('0',inputI.shape)
+        conv1_1 = conv_bn_relu(input=inputI, output_chn=8, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv1_1')
+        conv1_2 = conv_bn_relu(input=conv1_1, output_chn=8, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv1_2')
+        print('1',conv1_2.shape)
+        max1 = tf.nn.max_pool3d(conv1_2, [1,2,2,2,1], [1,2,2,2,1], padding='VALID')
+        conv2_1 = conv_bn_relu(input=max1, output_chn=16, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv2_1')
+        conv2_2 = conv_bn_relu(input=conv2_1, output_chn=16, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv2_2')
+        print('2',conv2_2.shape)
+        max2 = tf.nn.max_pool3d(conv2_2, [1,2,2,2,1], [1,2,2,2,1], padding='VALID')
+        conv3_1 = conv_bn_relu(input=max2, output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv3_1')
+        conv3_2 = conv_bn_relu(input=conv3_1, output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv3_2')
+        print('3',conv3_2.shape)
+        max3 = tf.nn.max_pool3d(conv3_2, [1,2,2,2,1], [1,2,2,2,1], padding='VALID')
+        conv4_1 = conv_bn_relu(input=max3, output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv4_1')
+        conv4_2 = conv_bn_relu(input=conv4_1, output_chn=64, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='conv4_2')
+        print('4',conv4_2.shape)
+        deconv0_1 = deconv_bn_relu(input=conv4_2, output_chn=64, is_training=phase_flag, name='deconv0_1')
+        # deconv0_2 = tf.concat([deconv0_1, conv3_2], 4)
+        deconv0_3 = conv_bn_relu(input=tf.concat([deconv0_1, conv3_2], 4), output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv0_3')
+        deconv0_4 = conv_bn_relu(input=deconv0_3, output_chn=32, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv0_4')
+        print('5',deconv0_4.shape)
+        deconv1_1 = deconv_bn_relu(input=deconv0_4, output_chn=32, is_training=phase_flag, name='deconv1_1')
+        # deconv1_2 = tf.concat([deconv1_1, conv2_2], 4)
+        deconv1_3 = conv_bn_relu(input=tf.concat([deconv1_1, conv2_2], 4), output_chn=16, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv1_3')
+        deconv1_4 = conv_bn_relu(input=deconv1_3, output_chn=16, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv1_4')
+        print('6',deconv1_4.shape)
+        deconv2_1 = deconv_bn_relu(input=deconv1_4, output_chn=8, is_training=phase_flag, name='deconv2_1')
+        # deconv2_2 = tf.concat([deconv2_1, conv1_2], 4)
+        deconv2_3 = conv_bn_relu(input=tf.concat([deconv2_1, conv1_2], 4), output_chn=8, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='deconv2_3')
+        print('7',deconv2_3.shape)
+        pred_prob1 = conv_bn_relu(input=deconv2_3, output_chn=self.output_chn, kernel_size=3, stride=1, use_bias=True, is_training=phase_flag, name='pred_prob1')
         pred_prob = conv3d(input=pred_prob1, output_chn=self.output_chn, kernel_size=3, stride=1, use_bias=True, name='pred_prob')
         pred_prob2 = conv3d(input=pred_prob, output_chn=self.output_chn, kernel_size=3, stride=1, use_bias=True, name='pred_prob2')
-        pred_prob3 = conv3d(input=pred_prob2, output_chn=self.output_chn, kernel_size=3, stride=1, use_bias=True, name='pred_prob3')
-        soft_prob=tf.nn.softmax(pred_prob3,name='task_0')
+        
+        soft_prob=tf.nn.softmax(pred_prob2,name='task_0')
         task0_label=tf.argmax(soft_prob,axis=4,name='argmax0')
-        print('task0:',task0_label.shape)
         return soft_prob,task0_label
-
-
-
 
     def train(self):
         print('training the n2 model')
@@ -137,9 +132,9 @@ class auto_encoder(object):
         self.sess.run(init_op)
         self.log_writer = tf.summary.FileWriter("./logs", self.sess.graph)
         counter=1
-        data_list =glob('{}/*.nrrd'.format(self.train_data_dir))
-        label_list=glob('{}/*.nrrd'.format(self.train_label_dir))
-        bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
+        data_list =sort(glob('{}/*.nrrd'.format(self.train_data_dir)))
+        label_list=sort(glob('{}/*.nrrd'.format(self.train_label_dir)))
+        bbox_list=sort(glob('{}/*.nrrd'.format(self.bbox_dir)))
         i=0
         print('valid set: ', self.valid_set)
         for epoch in np.arange(self.epoch):
@@ -174,11 +169,11 @@ class auto_encoder(object):
             print("*******Fail to load the checkpoint***************")
         self.log_writer = tf.summary.FileWriter("./logs", self.sess.graph)
         self.valid_set = valid
-        self.train_set = {i for i in range(100)} - valid
-        counter=1
-        data_list =glob('{}/*.nrrd'.format(self.train_data_dir))
-        label_list=glob('{}/*.nrrd'.format(self.train_label_dir))
-        bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
+        self.train_set = {i for i in range(600)} - valid
+        counter=x
+        data_list =sort(glob('{}/*.nrrd'.format(self.train_data_dir)))
+        label_list=sort(glob('{}/*.nrrd'.format(self.train_label_dir)))
+        bbox_list=sort(glob('{}/*.nrrd'.format(self.bbox_dir)))
         i=x
         for epoch in np.arange(self.epoch - x):
             i=i+1
@@ -210,8 +205,8 @@ class auto_encoder(object):
             print(" *****Successfully load the checkpoint**********")
         else:
             print("*******Fail to load the checkpoint***************")
-        data_list =glob('{}/*.nrrd'.format(self.test_data_dir))
-        bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
+        data_list =sort(glob('{}/*.nrrd'.format(self.test_data_dir)))
+        bbox_list=sort(glob('{}/*.nrrd'.format(self.bbox_dir)))
         
         k=1
         for i in range(len(data_list)):
@@ -226,9 +221,9 @@ class auto_encoder(object):
     
     def valid(self):
         print("******************Initiate validation******************")
-        data_list =glob('{}/*.nrrd'.format(self.train_data_dir))
-        label_list=glob('{}/*.nrrd'.format(self.train_label_dir))
-        bbox_list=glob('{}/*.nrrd'.format(self.bbox_dir))
+        data_list =sort(glob('{}/*.nrrd'.format(self.train_data_dir)))
+        label_list=sort(glob('{}/*.nrrd'.format(self.train_label_dir)))
+        bbox_list=sort(glob('{}/*.nrrd'.format(self.bbox_dir)))
         a = 0
         for i in range(len(self.valid_set)):
             valid_input,valid_label,hd,hl = load_bbox_pair_valid(bbox_list, data_list, label_list, list(self.valid_set)[i])
